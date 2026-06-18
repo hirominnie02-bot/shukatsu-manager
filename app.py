@@ -44,7 +44,7 @@ cursor.execute("SELECT * FROM companies")
 rows = cursor.fetchall()
 
 for row in rows:
-    col1, col2, col3 = st.columns([3,2,1])
+    col1, col2, col3, col4 = st.columns([3,2,1,1])
 
     with col1:
         st.write(row[1])
@@ -53,6 +53,27 @@ for row in rows:
         st.write(row[2])
 
     with col3:
+        new_status = st.selectbox(
+            "応募状況",
+            ["応募前", "応募済", "書類選考", "面接予定", "内定", "辞退"],
+            key=f"status_{row[0]}"
+        )
+        if st.button("変更", key=f"edit_{row[0]}"):
+
+            cursor.execute(
+                """
+                UPDATE companies
+                SET status = ?
+                WHERE id = ?
+                """,
+                (new_status, row[0])
+            )
+
+            conn.commit()
+            st.rerun()
+                        
+    
+    with col4:
         if st.button("削除", key=row[0]):
 
             cursor.execute(
