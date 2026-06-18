@@ -1,5 +1,6 @@
 import streamlit as st
 import sqlite3 #軽量データベースインポート
+import pandas as pd
 
 
 st.title("就活管理アプリ")
@@ -41,13 +42,16 @@ if st.button("保存"): #保存ボタンが押された時の処理-------------
 #登録企業名一覧表示--------------------------------
 cursor.execute("SELECT * FROM companies")
 rows = cursor.fetchall()
-st.subheader("登録済み企業")
 
-for row in rows:
-    if row[2]:
-        st.write(row[1], row[2])
-    else:
-        st.write(row[1], "未設定")
+df = pd.DataFrame(
+    rows,
+    columns=["ID", "会社名", "応募状況"]
+)
+
+df["応募状況"] = df["応募状況"].fillna("未設定")
+
+st.dataframe(df)
+
 
 #-------------------------------------------------
 
