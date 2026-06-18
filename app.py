@@ -7,7 +7,7 @@ st.title("就活管理アプリ")
 company_name = st.text_input("会社名")
 status = st.selectbox(
     "応募状況",
-    ["応募前", "応募済", "書類選考", "面接予定", "内定"]
+    ["応募前", "応募済", "書類選考", "面接予定", "内定", "辞退"]
 )
 
 #データベースjob_app.dbに接続
@@ -43,14 +43,45 @@ if st.button("保存"): #保存ボタンが押された時の処理-------------
 cursor.execute("SELECT * FROM companies")
 rows = cursor.fetchall()
 
-df = pd.DataFrame(
-    rows,
-    columns=["ID", "会社名", "応募状況"]
-)
+for row in rows:
+    col1, col2, col3 = st.columns([3,2,1])
 
-df["応募状況"] = df["応募状況"].fillna("未設定")
+    with col1:
+        st.write(row[1])
 
-st.dataframe(df)
+    with col2:
+        st.write(row[2])
+
+    with col3:
+        if st.button("削除", key=row[0]):
+
+            cursor.execute(
+                "DELETE FROM companies WHERE id = ?",
+                (row[0],)
+            )
+
+            conn.commit()
+
+            st.rerun()
+
+#pandas使った一覧表示
+# cursor.execute("SELECT * FROM companies")
+# rows = cursor.fetchall()
+
+# df = pd.DataFrame(
+#     rows,
+#     columns=["ID", "会社名", "応募状況"]
+# )
+
+# df["応募状況"] = df["応募状況"].fillna("未設定")
+
+# st.dataframe(df)
+
+# cursor.execute("""
+# DELETE FROM companies
+# WHERE id = 7
+# """)
+# conn.commit()
 
 
 #-------------------------------------------------

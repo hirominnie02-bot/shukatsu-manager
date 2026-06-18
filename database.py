@@ -19,10 +19,10 @@ CREATE TABLE IF NOT EXISTS companies (
 # id → 自動採番される主キー
 # company_name → 会社名を保存する列
 
-cursor.execute("""
-ALTER TABLE companies
-ADD COLUMN status TEXT
-""")
+# cursor.execute("""
+# ALTER TABLE companies
+# ADD COLUMN status TEXT
+# """)
 # companiesテーブルにstatus列を追加する
 
 conn.commit()
