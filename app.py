@@ -7,7 +7,7 @@ st.title("就活管理アプリ")
 company_name = st.text_input("会社名")
 status = st.selectbox(
     "応募状況",
-    ["応募前", "応募済", "書類選考", "面接予定", "内定", "辞退"]
+    ["応募前", "応募済", "書類選考", "面接予定", "内定", "返信待ち"]
 )
 
 #データベースjob_app.dbに接続
@@ -40,11 +40,23 @@ if st.button("保存"): #保存ボタンが押された時の処理-------------
         st.success("登録しました！")
     
 #登録企業名一覧表示--------------------------------
+
 cursor.execute("SELECT * FROM companies")
 rows = cursor.fetchall()
+for row in rows:
+    df = pd.DataFrame(
+    rows,
+    columns=["ID", "会社名", "応募状況"]
+    )
+    status_count = df["応募状況"].value_counts()
+st.write(status_count)
+
+st.subheader("応募状況サマリー")
+for status, count in status_count.items():
+    st.write(f"{status}：{count}件")
 
 for row in rows:
-    col1, col2, col3, col4 = st.columns([3,2,1,1])
+    col1, col2, col3, col4 = st.columns([3,2,2,1])
 
     with col1:
         st.write(row[1])
@@ -55,7 +67,7 @@ for row in rows:
     with col3:
         new_status = st.selectbox(
             "応募状況",
-            ["応募前", "応募済", "書類選考", "面接予定", "内定", "辞退"],
+            ["応募前", "応募済", "書類選考", "面接予定", "内定", "返信待ち"],
             key=f"status_{row[0]}"
         )
         if st.button("変更", key=f"edit_{row[0]}"):
