@@ -1,9 +1,13 @@
 import streamlit as st
-import sqlite3 
-#軽量データベースインポート
+import sqlite3 #軽量データベースインポート
+
 
 st.title("就活管理アプリ")
 company_name = st.text_input("会社名")
+status = st.selectbox(
+    "応募状況",
+    ["応募前", "応募済", "書類選考", "面接予定", "内定"]
+)
 
 #データベースjob_app.dbに接続
 conn = sqlite3.connect("job_app.db")
@@ -15,7 +19,7 @@ if st.button("保存"): #保存ボタンが押された時の処理-------------
     cursor.execute(
         #companiesテーブルからcompany_nameが入力された会社名と同じ物を探す
        "SELECT * FROM companies WHERE company_name = ?",
-        (company_name,)
+        (company_name,) #プレースホルダー(?)に値を渡す時はタプル形式で渡す
     )
     #最初に見つかった1件を受け取る⇔同じ会社があるか判断
     result = cursor.fetchone()
@@ -25,8 +29,8 @@ if st.button("保存"): #保存ボタンが押された時の処理-------------
     else: #みつかった以外の時
         cursor.execute(
             #新しいデータ (company_name)をcompanies(company_name)に追加
-            "INSERT INTO companies (company_name) VALUES (?)",
-            (company_name,)
+            "INSERT INTO companies (company_name, status) VALUES (?, ?)",
+            (company_name,status)
         )
 
         #データベースの変更を確定
@@ -40,7 +44,10 @@ rows = cursor.fetchall()
 st.subheader("登録済み企業")
 
 for row in rows:
-    st.write(row[1])
+    if row[2]:
+        st.write(row[1], row[2])
+    else:
+        st.write(row[1], "未設定")
 
 #-------------------------------------------------
 
