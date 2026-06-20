@@ -38,24 +38,41 @@ if st.button("保存"): #保存ボタンが押された時の処理-------------
         conn.commit()
 
         st.success("登録しました！")
-    
-#登録企業名一覧表示--------------------------------
 
+
+#操作画面--------------------------------
 cursor.execute("SELECT * FROM companies")
 rows = cursor.fetchall()
-for row in rows:
-    df = pd.DataFrame(
-    rows,
-    columns=["ID", "会社名", "応募状況"]
-    )
-    status_count = df["応募状況"].value_counts()
-st.write(status_count)
 
+
+#検索機能--------------------------------
+search_word = st.text_input("会社名検索") 
+
+display_rows = rows
+if search_word:
+    display_rows = []
+
+    for row in rows:
+        if search_word in row[1]:
+            display_rows.append(row)
+
+
+# 応募状況をデータフレームで表示----------
+df = pd.DataFrame(
+rows,
+columns=["ID", "会社名", "応募状況"]
+)
+status_count = df["応募状況"].value_counts()
+# st.write(status_count)
+
+# 応募状況をサマリーとして表示------------
 st.subheader("応募状況サマリー")
+st.write(f"登録企業数：{len(rows)}件")
 for status, count in status_count.items():
     st.write(f"{status}：{count}件")
 
-for row in rows:
+# 登録企業名一覧表示--------------------
+for row in display_rows:
     col1, col2, col3, col4 = st.columns([3,2,2,1])
 
     with col1:
@@ -96,6 +113,9 @@ for row in rows:
             conn.commit()
 
             st.rerun()
+
+
+
 
 #pandas使った一覧表示
 # cursor.execute("SELECT * FROM companies")
