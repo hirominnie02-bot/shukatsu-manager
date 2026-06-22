@@ -9,6 +9,7 @@ status = st.selectbox(
     "応募状況",
     ["応募前", "応募済", "書類選考", "面接予定", "内定", "返信待ち"]
 )
+apply_date = st.date_input("応募日")
 
 #データベースjob_app.dbに接続
 conn = sqlite3.connect("job_app.db")
@@ -30,8 +31,8 @@ if st.button("保存"): #保存ボタンが押された時の処理-------------
     else: #みつかった以外の時
         cursor.execute(
             #新しいデータ (company_name)をcompanies(company_name)に追加
-            "INSERT INTO companies (company_name, status) VALUES (?, ?)",
-            (company_name,status)
+            "INSERT INTO companies (company_name, status, application_date) VALUES (?, ?, ?)",
+            (company_name,status, apply_date)
         )
 
         #データベースの変更を確定
@@ -55,12 +56,16 @@ if search_word:
     for row in rows:
         if search_word in row[1]:
             display_rows.append(row)
+    
+    if len(display_rows) == 0:
+            st.warning("該当する企業がありません")
+
 
 
 # 応募状況をデータフレームで表示----------
 df = pd.DataFrame(
 rows,
-columns=["ID", "会社名", "応募状況"]
+columns=["ID", "会社名", "応募状況", "応募日"]
 )
 status_count = df["応募状況"].value_counts()
 # st.write(status_count)
@@ -73,7 +78,7 @@ for status, count in status_count.items():
 
 # 登録企業名一覧表示--------------------
 for row in display_rows:
-    col1, col2, col3, col4 = st.columns([3,2,2,1])
+    col1, col2, col3, col4, col5 = st.columns([3,2,2,2,1])
 
     with col1:
         st.write(row[1])
@@ -103,6 +108,12 @@ for row in display_rows:
                         
     
     with col4:
+        if row[3] is None:
+            st.write("未設定")
+        else:
+            st.write(row[3])
+    
+    with col5:
         if st.button("削除", key=row[0]):
 
             cursor.execute(
@@ -111,8 +122,8 @@ for row in display_rows:
             )
 
             conn.commit()
-
             st.rerun()
+    
 
 
 

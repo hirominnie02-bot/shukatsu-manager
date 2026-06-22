@@ -23,7 +23,15 @@ CREATE TABLE IF NOT EXISTS companies (
 # ALTER TABLE companies
 # ADD COLUMN status TEXT
 # """)
+# print("status追加")
 # companiesテーブルにstatus列を追加する
+
+# cursor.execute("""
+# ALTER TABLE companies
+# ADD COLUMN application_date TEXT
+# """)
+# print("application_date追加")
+# companiesテーブルにapplication_date列を追加する
 
 conn.commit()
 # データベースへの変更を確定する
