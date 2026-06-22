@@ -42,9 +42,26 @@ if st.button("保存"): #保存ボタンが押された時の処理-------------
 
 
 #操作画面--------------------------------
-cursor.execute("SELECT * FROM companies")
-rows = cursor.fetchall()
 
+st.subheader("検索・絞り込み")
+# 応募日ソート表示------------
+sort_order = st.selectbox(
+    "応募日並び順",
+    ["新しい順", "古い順"]
+)
+if sort_order == "新しい順":
+    cursor.execute("""
+    SELECT * FROM companies
+    ORDER BY application_date DESC
+    """)
+
+else:
+    cursor.execute("""
+    SELECT * FROM companies
+    ORDER BY application_date ASC
+    """)
+
+rows = cursor.fetchall()
 
 #検索機能--------------------------------
 search_word = st.text_input("会社名検索") 
@@ -60,6 +77,21 @@ if search_word:
     if len(display_rows) == 0:
             st.warning("該当する企業がありません")
 
+# 応募状況フィルター
+status_filter = st.selectbox(
+    "応募状況絞り込み",
+    ["すべて", "応募前", "応募済", "書類選考", "面接予定", "内定", "返信待ち"]
+)
+
+if status_filter != "すべて":
+    display_rows = []
+
+    for row in rows:
+        if row[2] == status_filter:
+            display_rows.append(row)
+            
+    if len(display_rows) == 0:
+        st.warning("該当する企業がありません")
 
 
 # 応募状況をデータフレームで表示----------
@@ -72,11 +104,24 @@ status_count = df["応募状況"].value_counts()
 
 # 応募状況をサマリーとして表示------------
 st.subheader("応募状況サマリー")
+
 st.write(f"登録企業数：{len(rows)}件")
-for status, count in status_count.items():
-    st.write(f"{status}：{count}件")
+
+statuses = list(status_count.items())
+half = len(statuses) // 2 + len(statuses) % 2
+
+col1, col2 = st.columns(2)
+with col1:
+    for status, count in statuses[:half]:
+        st.write(f"{status}：{count}件")
+
+with col2:
+    for status, count in statuses[half:]:
+        st.write(f"{status}：{count}件")
+
 
 # 登録企業名一覧表示--------------------
+st.subheader("応募状況")
 for row in display_rows:
     col1, col2, col3, col4, col5 = st.columns([3,2,2,2,1])
 
