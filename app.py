@@ -124,63 +124,38 @@ with col2:
 # 登録企業名一覧表示--------------------
 st.subheader("応募状況")
 for row in display_rows:
-    col1, col2, col3, col4, col5 = st.columns([3,2,2,1,2])
+    st.subheader(row[1])
+    new_apply_date = st.date_input(
+        "応募日",
+        value=row[3],
+        key=f"apply_date_{row[0]}"
+    )
+    status_list = [
+        "応募前",
+        "応募済",
+        "書類選考",
+        "面接予定",
+        "内定",
+        "返信待ち"
+    ]
 
-    with col1:
-        st.write(row[1])
+    new_status = st.selectbox(
+        "応募状況",
+        status_list,
+        index=status_list.index(row[2]),
+        key=f"status_{row[0]}"
+    )
 
-    with col2:
-        status_list = [
-            "応募前",
-            "応募済",
-            "書類選考",
-            "面接予定",
-            "内定",
-            "返信待ち"
-        ]
+    new_memo = st.text_area(
+        "メモ",
+        value=row[4],
+        height=80,
+        key=f"memo_{row[0]}"
+    )
 
-        new_status = st.selectbox(
-            "応募状況",
-            status_list,
-            index=status_list.index(row[2]),
-            key=f"status_{row[0]}"
-        )
-
-    with col3:
-        new_apply_date = st.date_input(
-            "応募日",
-            value=row[3],
-            key=f"apply_date_{row[0]}"
-            )
-        # if row[3] is None:
-        #     st.write("未設定")
-        # else:
-        #     st.write(row[3])
-                        
+    button_col1, button_col2, _ = st.columns([1,1,8])
     
-    with col4:
-        if st.button("削除", key=row[0]):
-
-            cursor.execute(
-                "DELETE FROM companies WHERE id = ?",
-                (row[0],)
-            )
-
-            conn.commit()
-            st.rerun()
-
-    
-    with col5:
-        new_memo = st.text_area(
-            "メモ",
-            value=row[4],
-            key=f"memo_{row[0]}"
-        )
-        if row[4] is None:
-            st.write("未入力")
-        else:
-            st.write(row[4])
-
+    with button_col1:
         if st.button("変更", key=f"edit_{row[0]}"):
 
             cursor.execute(
@@ -194,6 +169,103 @@ for row in display_rows:
 
             conn.commit()
             st.rerun()
+            
+
+    with button_col2:
+        delete_clicked = st.button("削除", key=f"delete_{row[0]}")
+
+        
+    if delete_clicked:
+        st.session_state["confirm_delete"] = row[0]
+
+    if st.session_state.get("confirm_delete") == row[0]:
+        st.warning(
+            "⚠ 本当に削除しますか？\n削除すると復元できません"
+        )
+        if st.button("はい", key=f"confirm_{row[0]}"):
+            cursor.execute(
+                "DELETE FROM companies WHERE id = ?",
+                (row[0],)
+            )
+
+            conn.commit()
+
+            st.session_state.pop("confirm_delete")
+
+            st.rerun()
+
+    st.divider()
+
+    # col1, col2, col3, col4, col5 = st.columns([3,2,2,1,2])
+
+    # with col1:
+    #     st.write(row[1])
+
+    # with col2:
+    #     status_list = [
+    #         "応募前",
+    #         "応募済",
+    #         "書類選考",
+    #         "面接予定",
+    #         "内定",
+    #         "返信待ち"
+    #     ]
+
+    #     new_status = st.selectbox(
+    #         "応募状況",
+    #         status_list,
+    #         index=status_list.index(row[2]),
+    #         key=f"status_{row[0]}"
+    #     )
+
+    # with col3:
+    #     new_apply_date = st.date_input(
+    #         "応募日",
+    #         value=row[3],
+    #         key=f"apply_date_{row[0]}"
+    #         )
+    #     # if row[3] is None:
+    #     #     st.write("未設定")
+    #     # else:
+    #     #     st.write(row[3])
+                        
+    
+    # with col4:
+    #     if st.button("削除", key=row[0]):
+
+    #         cursor.execute(
+    #             "DELETE FROM companies WHERE id = ?",
+    #             (row[0],)
+    #         )
+
+    #         conn.commit()
+    #         st.rerun()
+
+    
+    # with col5:
+    #     new_memo = st.text_area(
+    #         "メモ",
+    #         value=row[4],
+    #         key=f"memo_{row[0]}"
+    #     )
+    #     if row[4] is None:
+    #         st.write("未入力")
+    #     else:
+    #         st.write(row[4])
+
+    #     if st.button("変更", key=f"edit_{row[0]}"):
+
+    #         cursor.execute(
+    #             """
+    #             UPDATE companies
+    #             SET status = ?, memo = ?, application_date = ?
+    #             WHERE id = ?
+    #             """,
+    #             (new_status, new_memo, new_apply_date, row[0])
+    #         )
+
+    #         conn.commit()
+    #         st.rerun()
         
     
 
