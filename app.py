@@ -10,6 +10,7 @@ status = st.selectbox(
     ["応募前", "応募済", "書類選考", "面接予定", "内定", "返信待ち"]
 )
 apply_date = st.date_input("応募日")
+memo = st.text_area("メモ")
 
 #データベースjob_app.dbに接続
 conn = sqlite3.connect("job_app.db")
@@ -31,8 +32,8 @@ if st.button("保存"): #保存ボタンが押された時の処理-------------
     else: #みつかった以外の時
         cursor.execute(
             #新しいデータ (company_name)をcompanies(company_name)に追加
-            "INSERT INTO companies (company_name, status, application_date) VALUES (?, ?, ?)",
-            (company_name,status, apply_date)
+            "INSERT INTO companies (company_name, status, application_date, memo) VALUES (?, ?, ?, ?)",
+            (company_name,status, apply_date, memo)
         )
 
         #データベースの変更を確定
@@ -97,7 +98,7 @@ if status_filter != "すべて":
 # 応募状況をデータフレームで表示----------
 df = pd.DataFrame(
 rows,
-columns=["ID", "会社名", "応募状況", "応募日"]
+columns=["ID", "会社名", "応募状況", "応募日", "メモ"]
 )
 status_count = df["応募状況"].value_counts()
 # st.write(status_count)
@@ -123,42 +124,41 @@ with col2:
 # 登録企業名一覧表示--------------------
 st.subheader("応募状況")
 for row in display_rows:
-    col1, col2, col3, col4, col5 = st.columns([3,2,2,2,1])
+    col1, col2, col3, col4, col5 = st.columns([3,2,2,1,2])
 
     with col1:
         st.write(row[1])
 
     with col2:
-        st.write(row[2])
+        status_list = [
+            "応募前",
+            "応募済",
+            "書類選考",
+            "面接予定",
+            "内定",
+            "返信待ち"
+        ]
 
-    with col3:
         new_status = st.selectbox(
             "応募状況",
-            ["応募前", "応募済", "書類選考", "面接予定", "内定", "返信待ち"],
+            status_list,
+            index=status_list.index(row[2]),
             key=f"status_{row[0]}"
         )
-        if st.button("変更", key=f"edit_{row[0]}"):
 
-            cursor.execute(
-                """
-                UPDATE companies
-                SET status = ?
-                WHERE id = ?
-                """,
-                (new_status, row[0])
+    with col3:
+        new_apply_date = st.date_input(
+            "応募日",
+            value=row[3],
+            key=f"apply_date_{row[0]}"
             )
-
-            conn.commit()
-            st.rerun()
+        # if row[3] is None:
+        #     st.write("未設定")
+        # else:
+        #     st.write(row[3])
                         
     
     with col4:
-        if row[3] is None:
-            st.write("未設定")
-        else:
-            st.write(row[3])
-    
-    with col5:
         if st.button("削除", key=row[0]):
 
             cursor.execute(
@@ -168,6 +168,33 @@ for row in display_rows:
 
             conn.commit()
             st.rerun()
+
+    
+    with col5:
+        new_memo = st.text_area(
+            "メモ",
+            value=row[4],
+            key=f"memo_{row[0]}"
+        )
+        if row[4] is None:
+            st.write("未入力")
+        else:
+            st.write(row[4])
+
+        if st.button("変更", key=f"edit_{row[0]}"):
+
+            cursor.execute(
+                """
+                UPDATE companies
+                SET status = ?, memo = ?, application_date = ?
+                WHERE id = ?
+                """,
+                (new_status, new_memo, new_apply_date, row[0])
+            )
+
+            conn.commit()
+            st.rerun()
+        
     
 
 
