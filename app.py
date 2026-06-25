@@ -4,6 +4,7 @@ import pandas as pd
 
 
 st.title("就活管理アプリ")
+
 company_name = st.text_input("会社名")
 status = st.selectbox(
     "応募状況",
@@ -168,16 +169,26 @@ for row in display_rows:
             )
 
             conn.commit()
+
+            # 再描画後に表示する成功メッセージを保存
+            st.session_state["message"] = "変更しました"
+            st.session_state["message_id"] = row[0]
+            # st.toast("変更しました")
+
+            # 最新データを反映するため再描画
             st.rerun()
+
             
 
     with button_col2:
         delete_clicked = st.button("削除", key=f"delete_{row[0]}")
 
-        
+    # 削除ボタンが押されたら確認対象のIDを保存    
     if delete_clicked:
         st.session_state["confirm_delete"] = row[0]
 
+    # 削除確認中のIDと現在の行IDが一致した場合のみ警告を表示
+    
     if st.session_state.get("confirm_delete") == row[0]:
         st.warning(
             "⚠ 本当に削除しますか？\n削除すると復元できません"
@@ -187,112 +198,33 @@ for row in display_rows:
                 "DELETE FROM companies WHERE id = ?",
                 (row[0],)
             )
-
             conn.commit()
 
+            # 削除確認状態を解除
             st.session_state.pop("confirm_delete")
 
+            # 最新状態を反映するため再描画
             st.rerun()
+
+        elif st.button("いいえ", key=f"cancel_{row[0]}"):
+            # 削除確認状態を解除
+            st.session_state.pop("confirm_delete")
+            # 最新状態を反映するため再描画
+            st.rerun()
+
+
+    # 変更完了メッセージが保存されていたら表示
+    if st.session_state.get("message") and st.session_state.get("message_id") == row[0]:
+
+        st.success(
+            st.session_state["message"]
+        )
+        # 表示後は削除して次回表示されないようにする
+        st.session_state.pop("message")
 
     st.divider()
 
-    # col1, col2, col3, col4, col5 = st.columns([3,2,2,1,2])
-
-    # with col1:
-    #     st.write(row[1])
-
-    # with col2:
-    #     status_list = [
-    #         "応募前",
-    #         "応募済",
-    #         "書類選考",
-    #         "面接予定",
-    #         "内定",
-    #         "返信待ち"
-    #     ]
-
-    #     new_status = st.selectbox(
-    #         "応募状況",
-    #         status_list,
-    #         index=status_list.index(row[2]),
-    #         key=f"status_{row[0]}"
-    #     )
-
-    # with col3:
-    #     new_apply_date = st.date_input(
-    #         "応募日",
-    #         value=row[3],
-    #         key=f"apply_date_{row[0]}"
-    #         )
-    #     # if row[3] is None:
-    #     #     st.write("未設定")
-    #     # else:
-    #     #     st.write(row[3])
-                        
     
-    # with col4:
-    #     if st.button("削除", key=row[0]):
-
-    #         cursor.execute(
-    #             "DELETE FROM companies WHERE id = ?",
-    #             (row[0],)
-    #         )
-
-    #         conn.commit()
-    #         st.rerun()
-
-    
-    # with col5:
-    #     new_memo = st.text_area(
-    #         "メモ",
-    #         value=row[4],
-    #         key=f"memo_{row[0]}"
-    #     )
-    #     if row[4] is None:
-    #         st.write("未入力")
-    #     else:
-    #         st.write(row[4])
-
-    #     if st.button("変更", key=f"edit_{row[0]}"):
-
-    #         cursor.execute(
-    #             """
-    #             UPDATE companies
-    #             SET status = ?, memo = ?, application_date = ?
-    #             WHERE id = ?
-    #             """,
-    #             (new_status, new_memo, new_apply_date, row[0])
-    #         )
-
-    #         conn.commit()
-    #         st.rerun()
-        
-    
-
-
-
-
-#pandas使った一覧表示
-# cursor.execute("SELECT * FROM companies")
-# rows = cursor.fetchall()
-
-# df = pd.DataFrame(
-#     rows,
-#     columns=["ID", "会社名", "応募状況"]
-# )
-
-# df["応募状況"] = df["応募状況"].fillna("未設定")
-
-# st.dataframe(df)
-
-# cursor.execute("""
-# DELETE FROM companies
-# WHERE id = 7
-# """)
-# conn.commit()
-
-
-#-------------------------------------------------
 
 #データベースの接続を終了する
 conn.close()
