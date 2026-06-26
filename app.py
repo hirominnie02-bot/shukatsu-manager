@@ -70,14 +70,16 @@ search_word = st.text_input("会社名検索")
 
 display_rows = rows
 if search_word:
-    display_rows = []
-
-    for row in rows:
+    search_results = []
+    for row in display_rows:
+        
         if search_word in row[1]:
-            display_rows.append(row)
+            search_results.append(row)
+
+    display_rows = search_results
     
     if len(display_rows) == 0:
-            st.warning("該当する企業がありません")
+        st.warning("該当する企業がありません")
 
 # 応募状況フィルター
 status_filter = st.selectbox(
@@ -86,11 +88,13 @@ status_filter = st.selectbox(
 )
 
 if status_filter != "すべて":
-    display_rows = []
+    filter_results = []
 
-    for row in rows:
+    for row in display_rows:
         if row[2] == status_filter:
-            display_rows.append(row)
+            filter_results.append(row)
+            
+    display_rows = filter_results
             
     if len(display_rows) == 0:
         st.warning("該当する企業がありません")
@@ -122,7 +126,7 @@ with col2:
         st.write(f"{status}：{count}件")
 
 
-# 登録企業名一覧表示--------------------
+# 登録企業一覧表示--------------------
 st.subheader("応募状況")
 for row in display_rows:
     st.subheader(row[1])
@@ -193,24 +197,30 @@ for row in display_rows:
         st.warning(
             "⚠ 本当に削除しますか？\n削除すると復元できません"
         )
-        if st.button("はい", key=f"confirm_{row[0]}"):
-            cursor.execute(
-                "DELETE FROM companies WHERE id = ?",
-                (row[0],)
-            )
-            conn.commit()
+        confirm_col1, confirm_col2, _ = st.columns([1,2,7])
 
-            # 削除確認状態を解除
-            st.session_state.pop("confirm_delete")
+        with confirm_col1:
 
-            # 最新状態を反映するため再描画
-            st.rerun()
+            if st.button("はい", key=f"confirm_{row[0]}"):
+                cursor.execute(
+                    "DELETE FROM companies WHERE id = ?",
+                    (row[0],)
+                )
+                conn.commit()
 
-        elif st.button("いいえ", key=f"cancel_{row[0]}"):
-            # 削除確認状態を解除
-            st.session_state.pop("confirm_delete")
-            # 最新状態を反映するため再描画
-            st.rerun()
+                # 削除確認状態を解除
+                st.session_state.pop("confirm_delete")
+
+                # 最新状態を反映するため再描画
+                st.rerun()
+
+        with confirm_col2:
+
+            if st.button("いいえ", key=f"cancel_{row[0]}"):
+                # 削除確認状態を解除
+                st.session_state.pop("confirm_delete")
+                # 最新状態を反映するため再描画
+                st.rerun()
 
 
     # 変更完了メッセージが保存されていたら表示
