@@ -12,6 +12,7 @@ status = st.selectbox(
 )
 apply_date = st.date_input("応募日")
 memo = st.text_area("メモ")
+url = st.text_input("URL")
 
 #データベースjob_app.dbに接続
 conn = sqlite3.connect("job_app.db")
@@ -33,8 +34,8 @@ if st.button("保存"): #保存ボタンが押された時の処理-------------
     else: #みつかった以外の時
         cursor.execute(
             #新しいデータ (company_name)をcompanies(company_name)に追加
-            "INSERT INTO companies (company_name, status, application_date, memo) VALUES (?, ?, ?, ?)",
-            (company_name,status, apply_date, memo)
+            "INSERT INTO companies (company_name, status, application_date, memo, url) VALUES (?, ?, ?, ?,?)",
+            (company_name,status, apply_date, memo, url)
         )
 
         #データベースの変更を確定
@@ -103,7 +104,7 @@ if status_filter != "すべて":
 # 応募状況をデータフレームで表示----------
 df = pd.DataFrame(
 rows,
-columns=["ID", "会社名", "応募状況", "応募日", "メモ"]
+columns=["ID", "会社名", "応募状況", "応募日", "メモ", "URL"]
 )
 status_count = df["応募状況"].value_counts()
 # st.write(status_count)
@@ -158,6 +159,17 @@ for row in display_rows:
         key=f"memo_{row[0]}"
     )
 
+    new_url = st.text_input(
+        "URL",
+        value=row[5],
+        key=f"URL_{row[0]}"
+    )
+    if row[5]:
+        st.link_button(
+            "🌐 企業研究する",
+            row[5]
+    )
+
     button_col1, button_col2, _ = st.columns([1,1,8])
     
     with button_col1:
@@ -166,10 +178,10 @@ for row in display_rows:
             cursor.execute(
                 """
                 UPDATE companies
-                SET status = ?, memo = ?, application_date = ?
+                SET status = ?, memo = ?, application_date = ?, url = ?
                 WHERE id = ?
                 """,
-                (new_status, new_memo, new_apply_date, row[0])
+                (new_status, new_memo, new_apply_date, new_url, row[0])
             )
 
             conn.commit()

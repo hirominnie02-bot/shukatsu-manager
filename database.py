@@ -33,12 +33,19 @@ CREATE TABLE IF NOT EXISTS companies (
 # print("application_date追加")
 # companiesテーブルにapplication_date列を追加する
 
+# cursor.execute("""
+# ALTER TABLE companies
+# ADD COLUMN memo TEXT
+# """)
+# print("memo追加")
+# companiesテーブルにmemo列を追加する
+
 cursor.execute("""
 ALTER TABLE companies
-ADD COLUMN memo TEXT
+ADD COLUMN url TEXT
 """)
-print("memo追加")
-# companiesテーブルにmemo列を追加する
+print("url追加")
+# companiesテーブルにurl列を追加する
 
 conn.commit()
 # データベースへの変更を確定する
