@@ -1,9 +1,14 @@
 import streamlit as st
 import sqlite3 #軽量データベースインポート
 import pandas as pd
+import requests
 
 
 st.title("就活管理アプリ")
+
+if st.session_state.get("message"):
+    st.success(st.session_state["message"])
+    st.session_state.pop("message")
 
 company_name = st.text_input("会社名")
 status = st.selectbox(
@@ -130,7 +135,9 @@ with col2:
 # 登録企業一覧表示--------------------
 st.subheader("応募状況")
 for row in display_rows:
+
     st.subheader(row[1])
+
     new_apply_date = st.date_input(
         "応募日",
         value=row[3],
@@ -220,6 +227,8 @@ for row in display_rows:
                 )
                 conn.commit()
 
+                st.session_state["message"] = "🗑️ 削除しました"
+
                 # 削除確認状態を解除
                 st.session_state.pop("confirm_delete")
 
@@ -236,11 +245,11 @@ for row in display_rows:
 
 
     # 変更完了メッセージが保存されていたら表示
-    if st.session_state.get("message") and st.session_state.get("message_id") == row[0]:
+    if st.session_state.get("message") :
 
-        st.success(
-            st.session_state["message"]
-        )
+        st.session_state["message"] = "✅ 変更しました"
+        st.rerun()
+        
         # 表示後は削除して次回表示されないようにする
         st.session_state.pop("message")
 
