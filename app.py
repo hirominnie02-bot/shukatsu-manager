@@ -1,14 +1,10 @@
 import streamlit as st
 import sqlite3 #軽量データベースインポート
 import pandas as pd
-import requests
+import matplotlib.pyplot as plt
 
 
 st.title("就活管理アプリ")
-
-if st.session_state.get("message"):
-    st.success(st.session_state["message"])
-    st.session_state.pop("message")
 
 company_name = st.text_input("会社名")
 status = st.selectbox(
@@ -112,6 +108,7 @@ rows,
 columns=["ID", "会社名", "応募状況", "応募日", "メモ", "URL"]
 )
 status_count = df["応募状況"].value_counts()
+fig, ax = plt.subplots()
 # st.write(status_count)
 
 # 応募状況をサマリーとして表示------------
@@ -134,6 +131,7 @@ with col2:
 
 # 登録企業一覧表示--------------------
 st.subheader("応募状況")
+
 for row in display_rows:
 
     st.subheader(row[1])
@@ -194,9 +192,8 @@ for row in display_rows:
             conn.commit()
 
             # 再描画後に表示する成功メッセージを保存
-            st.session_state["message"] = "変更しました"
+            st.session_state["message"] = "✅ 変更しました"
             st.session_state["message_id"] = row[0]
-            # st.toast("変更しました")
 
             # 最新データを反映するため再描画
             st.rerun()
@@ -227,7 +224,6 @@ for row in display_rows:
                 )
                 conn.commit()
 
-                st.session_state["message"] = "🗑️ 削除しました"
 
                 # 削除確認状態を解除
                 st.session_state.pop("confirm_delete")
@@ -245,13 +241,13 @@ for row in display_rows:
 
 
     # 変更完了メッセージが保存されていたら表示
-    if st.session_state.get("message") :
+    if (st.session_state.get("message") and st.session_state.get("message_id") == row[0]):
+        st.success(st.session_state["message"])
 
-        st.session_state["message"] = "✅ 変更しました"
-        st.rerun()
-        
         # 表示後は削除して次回表示されないようにする
         st.session_state.pop("message")
+        st.session_state.pop("message_id")
+
 
     st.divider()
 
