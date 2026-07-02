@@ -3,6 +3,7 @@ import sqlite3 #軽量データベースインポート
 import pandas as pd
 import matplotlib.pyplot as plt
 
+plt.rcParams["font.family"] = "Yu Gothic"
 
 st.title("就活管理アプリ")
 
@@ -108,7 +109,39 @@ rows,
 columns=["ID", "会社名", "応募状況", "応募日", "メモ", "URL"]
 )
 status_count = df["応募状況"].value_counts()
-fig, ax = plt.subplots()
+fig, ax = plt.subplots(figsize=(1.6,1.6))
+wedges, texts = ax.pie(
+    status_count.values,
+    colors=[
+    "#A8D8EA",
+    "#AAE3A2",
+    "#FFD3B6",
+    "#FFAAA5",
+    "#D4A5A5",
+    "#C7CEEA"
+    ]
+    
+)
+
+if len(rows) == 0:
+    st.info(
+    "まだ企業が登録されていません😊"
+    )
+else:
+    col1, col2 = st.columns([3,7])
+    with col1:
+        for status, count in status_count.items():
+            st.write(f"🟦 {status}　{count}件")
+
+    with col2:
+        st.pyplot(
+            fig,
+            use_container_width=False
+        )
+        # st.pyplot(fig)
+
+
+
 # st.write(status_count)
 
 # 応募状況をサマリーとして表示------------
