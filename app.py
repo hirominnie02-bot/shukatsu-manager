@@ -130,8 +130,20 @@ if len(rows) == 0:
 else:
     col1, col2 = st.columns([3,7])
     with col1:
+        status_colors = {
+        "応募前": "#A8D8EA",
+        "応募済": "#AAE3A2",
+        "返信待ち": "#FFD3B6",
+        "書類選考": "#FFAAA5",
+        "面接予定": "#D4A5A5",
+        "内定": "#C7CEEA"
+        }
         for status, count in status_count.items():
-            st.write(f"🟦 {status}　{count}件")
+            st.markdown(
+                f'<span style="color:red">■ {status}　{count}件</span>',
+                unsafe_allow_html=True
+            )
+                
 
     with col2:
         st.pyplot(
