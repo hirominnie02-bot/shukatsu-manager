@@ -6,45 +6,55 @@ import matplotlib.pyplot as plt
 plt.rcParams["font.family"] = "Yu Gothic"
 
 st.title("就活管理アプリ")
+with st.form("company_form", clear_on_submit=True):
+    company_name = st.text_input(
+    "会社名",
+                             )
+    status = st.selectbox(
+        "応募状況",
+        ["応募前", "応募済", "書類選考", "面接予定", "内定", "返信待ち"]
+    )
+    apply_date = st.date_input("応募日")
+    memo = st.text_area("メモ")
+    url = st.text_input("URL")
+    submitted = st.form_submit_button("保存")
 
-company_name = st.text_input("会社名")
-status = st.selectbox(
-    "応募状況",
-    ["応募前", "応募済", "書類選考", "面接予定", "内定", "返信待ち"]
-)
-apply_date = st.date_input("応募日")
-memo = st.text_area("メモ")
-url = st.text_input("URL")
 
 #データベースjob_app.dbに接続
 conn = sqlite3.connect("job_app.db")
 #SQL実行担当作成
 cursor = conn.cursor()
 
-if st.button("保存"): #保存ボタンが押された時の処理---------------------
-    # 同じ会社があるか確認
-    cursor.execute(
-        #companiesテーブルからcompany_nameが入力された会社名と同じ物を探す
-       "SELECT * FROM companies WHERE company_name = ?",
-        (company_name,) #プレースホルダー(?)に値を渡す時はタプル形式で渡す
-    )
-    #最初に見つかった1件を受け取る⇔同じ会社があるか判断
-    result = cursor.fetchone()
 
-    if result: #見つかったなら
-        st.warning("既に登録されています")
-    else: #みつかった以外の時
+if submitted: #保存ボタンが押された時の処理---------------------
+    if company_name == "":
+        st.warning("会社名を入力してください")
+    else:
+
+        # 同じ会社があるか確認
         cursor.execute(
-            #新しいデータ (company_name)をcompanies(company_name)に追加
-            "INSERT INTO companies (company_name, status, application_date, memo, url) VALUES (?, ?, ?, ?,?)",
-            (company_name,status, apply_date, memo, url)
+            #companiesテーブルからcompany_nameが入力された会社名と同じ物を探す
+        "SELECT * FROM companies WHERE company_name = ?",
+            (company_name,) #プレースホルダー(?)に値を渡す時はタプル形式で渡す
         )
+        #最初に見つかった1件を受け取る⇔同じ会社があるか判断
+        result = cursor.fetchone()
 
-        #データベースの変更を確定
-        conn.commit()
+        if result: #見つかったなら
+            st.warning("既に登録されています")
+        else: #みつかった以外の時
+            cursor.execute(
+                #新しいデータ (company_name)をcompanies(company_name)に追加
+                "INSERT INTO companies (company_name, status, application_date, memo, url) VALUES (?, ?, ?, ?,?)",
+                (company_name,status, apply_date, memo, url)
+            )
 
-        st.success("登録しました！")
+            #データベースの変更を確定
+            conn.commit()
 
+            st.success("登録しました！")
+        
+st.divider()
 
 #操作画面--------------------------------
 
@@ -104,12 +114,17 @@ if status_filter != "すべて":
 
 
 # 応募状況をデータフレームで表示----------
+
+# 応募状況をサマリーとして表示------------
+st.subheader("応募状況サマリー")
+
+st.write(f"登録企業数：{len(rows)}件")
 df = pd.DataFrame(
 rows,
 columns=["ID", "会社名", "応募状況", "応募日", "メモ", "URL"]
 )
 status_count = df["応募状況"].value_counts()
-fig, ax = plt.subplots(figsize=(1.6,1.6))
+fig, ax = plt.subplots(figsize=(2,2))
 wedges, texts = ax.pie(
     status_count.values,
     colors=[
@@ -140,7 +155,7 @@ else:
         }
         for status, count in status_count.items():
             st.markdown(
-                f'<span style="color:red">■ {status}　{count}件</span>',
+                f'<span style="color:{status_colors[status]}"><span style="font-size:25px; vertical-align:-2px">■ </span><span style="color:black">{status}　{count}件</span></span>',
                 unsafe_allow_html=True
             )
                 
@@ -152,26 +167,26 @@ else:
         )
         # st.pyplot(fig)
 
-
+st.divider()
 
 # st.write(status_count)
 
 # 応募状況をサマリーとして表示------------
-st.subheader("応募状況サマリー")
+# st.subheader("応募状況サマリー")
 
-st.write(f"登録企業数：{len(rows)}件")
+# st.write(f"登録企業数：{len(rows)}件")
 
-statuses = list(status_count.items())
-half = len(statuses) // 2 + len(statuses) % 2
+# statuses = list(status_count.items())
+# half = len(statuses) // 2 + len(statuses) % 2
 
-col1, col2 = st.columns(2)
-with col1:
-    for status, count in statuses[:half]:
-        st.write(f"{status}：{count}件")
+# col1, col2 = st.columns(2)
+# with col1:
+#     for status, count in statuses[:half]:
+#         st.write(f"{status}：{count}件")
 
-with col2:
-    for status, count in statuses[half:]:
-        st.write(f"{status}：{count}件")
+# with col2:
+#     for status, count in statuses[half:]:
+#         st.write(f"{status}：{count}件")
 
 
 # 登録企業一覧表示--------------------
