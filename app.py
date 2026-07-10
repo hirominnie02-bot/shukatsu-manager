@@ -54,10 +54,9 @@ if submitted: #保存ボタンが押された時の処理---------------------
 
             st.success("登録しました！")
         
-st.divider()
+
 
 #操作画面--------------------------------
-
 st.subheader("検索・絞り込み")
 # 応募日ソート表示------------
 sort_order = st.selectbox(
@@ -169,25 +168,6 @@ else:
 
 st.divider()
 
-# st.write(status_count)
-
-# 応募状況をサマリーとして表示------------
-# st.subheader("応募状況サマリー")
-
-# st.write(f"登録企業数：{len(rows)}件")
-
-# statuses = list(status_count.items())
-# half = len(statuses) // 2 + len(statuses) % 2
-
-# col1, col2 = st.columns(2)
-# with col1:
-#     for status, count in statuses[:half]:
-#         st.write(f"{status}：{count}件")
-
-# with col2:
-#     for status, count in statuses[half:]:
-#         st.write(f"{status}：{count}件")
-
 
 # 登録企業一覧表示--------------------
 st.subheader("応募状況")
@@ -239,26 +219,39 @@ for row in display_rows:
     
     with button_col1:
         if st.button("変更", key=f"edit_{row[0]}"):
+            #変更内容があるか確認
+            if (
+                new_status == row[2]
+                and str(new_apply_date) == row[3]
+                and new_memo == row[4]
+                and new_url == row[5]
+            ):
+                # 再描画後に表示する成功メッセージを保存
+                st.session_state["message"] = "ℹ️ 変更はありません"
+                st.session_state["message_type"] = "info"
+                st.session_state["message_id"] = row[0]
 
-            cursor.execute(
-                """
-                UPDATE companies
-                SET status = ?, memo = ?, application_date = ?, url = ?
-                WHERE id = ?
-                """,
-                (new_status, new_memo, new_apply_date, new_url, row[0])
-            )
+                
+            else:
+                cursor.execute(
+                    """
+                    UPDATE companies
+                    SET status = ?, memo = ?, application_date = ?, url = ?
+                    WHERE id = ?
+                    """,
+                    (new_status, new_memo, new_apply_date, new_url, row[0])
+                )
 
-            conn.commit()
+                conn.commit()
 
-            # 再描画後に表示する成功メッセージを保存
-            st.session_state["message"] = "✅ 変更しました"
-            st.session_state["message_id"] = row[0]
+                # 再描画後に表示する成功メッセージを保存
+                st.session_state["message"] = "✅ 変更しました"
+                st.session_state["message_type"] = "success"
+                st.session_state["message_id"] = row[0]
 
-            # 最新データを反映するため再描画
-            st.rerun()
-
-            
+                # 最新データを反映するため再描画
+                st.rerun()
+        
 
     with button_col2:
         delete_clicked = st.button("削除", key=f"delete_{row[0]}")
@@ -301,17 +294,34 @@ for row in display_rows:
 
 
     # 変更完了メッセージが保存されていたら表示
-    if (st.session_state.get("message") and st.session_state.get("message_id") == row[0]):
+    if (
+        st.session_state.get("message")
+        and st.session_state.get("message_id") == row[0]
+        and st.session_state.get("message_type") == "success"
+        ):
         st.success(st.session_state["message"])
-
-        # 表示後は削除して次回表示されないようにする
-        st.session_state.pop("message")
-        st.session_state.pop("message_id")
-
-
-    st.divider()
+        
+    elif(
+        st.session_state.get("message")
+        and st.session_state.get("message_id") == row[0]
+        and st.session_state.get("message_type") == "info"
+        ):
+        st.info(st.session_state["message"])
 
     
+        st.divider()
+
+# 表示後は削除して次回表示されないようにする
+st.session_state.pop("message")
+st.session_state.pop("message_type")
+st.session_state.pop("message_id")
+
+        
+
+st.write(new_memo)
+st.write(type(new_memo))
+st.write(row[4])   
+st.write(type(row[4]))   
 
 #データベースの接続を終了する
 conn.close()
