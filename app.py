@@ -2,6 +2,12 @@ import streamlit as st
 import sqlite3 #軽量データベースインポート
 import pandas as pd
 import matplotlib.pyplot as plt
+import requests
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+api_key = os.getenv("TAVILY_API_KEY")
 
 plt.rcParams["font.family"] = "Yu Gothic"
 
