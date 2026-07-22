@@ -49,6 +49,8 @@ if submitted: #保存ボタンが押された時の処理---------------------
         if result: #見つかったなら
             st.warning("既に登録されています")
         else: #みつかった以外の時
+            # API検索
+            # ##
             cursor.execute(
                 #新しいデータ (company_name)をcompanies(company_name)に追加
                 "INSERT INTO companies (company_name, status, application_date, memo, url) VALUES (?, ?, ?, ?,?)",
