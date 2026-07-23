@@ -3,11 +3,15 @@ import sqlite3 #軽量データベースインポート
 import pandas as pd
 import matplotlib.pyplot as plt
 import requests
-import os
 from dotenv import load_dotenv
+from tavily import TavilyClient
+import os
 
 load_dotenv()
+
 api_key = os.getenv("TAVILY_API_KEY")
+tavily_client = TavilyClient(api_key)
+
 
 plt.rcParams["font.family"] = "Yu Gothic"
 
@@ -50,7 +54,41 @@ if submitted: #保存ボタンが押された時の処理---------------------
             st.warning("既に登録されています")
         else: #みつかった以外の時
             # API検索
-            # ##
+            # ←① API検索
+
+            url = ""
+            response = tavily_client.search(
+                query=company_name
+            )
+            st.write(response)
+            results = response.get("results")
+
+            # ←② URL取り出す
+            if results:
+                for result in results:
+                    url = result.get("url")
+
+                    if not url:
+                        continue
+                        
+                    if "mid-tenshoku" in url:
+                        continue
+
+                    if "wiki" in url:
+                        continue
+
+                    if "openwork" in url:
+                        continue
+
+                    if "shopping" in url:
+                        continue
+                    
+                    if "youtube" in url:
+                        continue
+
+                    break
+
+            # ←③ INSERT
             cursor.execute(
                 #新しいデータ (company_name)をcompanies(company_name)に追加
                 "INSERT INTO companies (company_name, status, application_date, memo, url) VALUES (?, ?, ?, ?,?)",
@@ -319,17 +357,12 @@ for row in display_rows:
     
         st.divider()
 
-# 表示後は削除して次回表示されないようにする
-st.session_state.pop("message")
-st.session_state.pop("message_type")
-st.session_state.pop("message_id")
+    # 表示後は削除して次回表示されないようにする
+    st.session_state.pop("message", None)
+    st.session_state.pop("message_type", None)
+    st.session_state.pop("message_id", None)
 
-        
-
-st.write(new_memo)
-st.write(type(new_memo))
-st.write(row[4])   
-st.write(type(row[4]))   
+    
 
 #データベースの接続を終了する
 conn.close()
