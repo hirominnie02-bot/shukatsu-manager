@@ -64,28 +64,36 @@ if submitted: #保存ボタンが押された時の処理---------------------
             results = response.get("results")
 
             # ←② URL取り出す
-            if results:
+            NG_DOMAINS = [
+                        "mid-tenshoku",
+                        "wiki",
+                        "openwork",
+                        "mynavi",
+                        "shopping",
+                        "youtube",
+                        "britannica.com",
+                        "blog",
+                        "huggingface",
+                        "hf.co",
+                        "x.com",
+                        "finance.yahoo.co.jp",
+                        "onecareer.jp"
+                    ]
+            
+
+            if results:    
                 for result in results:
                     url = result.get("url")
+                    is_ng = False #このURLが公式サイトか判別するフラグ
 
                     if not url:
                         continue
-                        
-                    if "mid-tenshoku" in url:
-                        continue
-
-                    if "wiki" in url:
-                        continue
-
-                    if "openwork" in url:
-                        continue
-
-                    if "shopping" in url:
-                        continue
-                    
-                    if "youtube" in url:
-                        continue
-
+                    for ng_domain in NG_DOMAINS:
+                        if ng_domain in url:
+                            is_ng = True
+                            break
+                    if is_ng:
+                            continue   
                     break
 
             # ←③ INSERT
