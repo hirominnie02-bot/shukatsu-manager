@@ -16,361 +16,383 @@ tavily_client = TavilyClient(api_key)
 plt.rcParams["font.family"] = "Yu Gothic"
 
 st.title("就活管理アプリ")
-with st.form("company_form", clear_on_submit=True):
-    company_name = st.text_input(
-    "会社名",
-                             )
-    status = st.selectbox(
-        "応募状況",
-        ["応募前", "応募済", "書類選考", "面接予定", "内定", "返信待ち"]
-    )
-    apply_date = st.date_input("応募日")
-    memo = st.text_area("メモ")
-    url = st.text_input("URL")
-    submitted = st.form_submit_button("保存")
-
-
 #データベースjob_app.dbに接続
 conn = sqlite3.connect("job_app.db")
 #SQL実行担当作成
 cursor = conn.cursor()
-
-
-if submitted: #保存ボタンが押された時の処理---------------------
-    if company_name == "":
-        st.warning("会社名を入力してください")
-    else:
-
-        # 同じ会社があるか確認
-        cursor.execute(
-            #companiesテーブルからcompany_nameが入力された会社名と同じ物を探す
-        "SELECT * FROM companies WHERE company_name = ?",
-            (company_name,) #プレースホルダー(?)に値を渡す時はタプル形式で渡す
+page = st.sidebar.radio(
+    "📁 メニュー",
+    ["登録", "企業一覧"]
+)
+if page == "登録":
+    with st.form("company_form", clear_on_submit=True):
+        company_name = st.text_input(
+        "会社名",
+                                )
+        status = st.selectbox(
+            "応募状況",
+            ["応募前", "応募済", "書類選考", "面接予定", "内定", "返信待ち"]
         )
-        #最初に見つかった1件を受け取る⇔同じ会社があるか判断
-        result = cursor.fetchone()
+        apply_date = st.date_input("応募日")
+        memo = st.text_area("メモ")
+        url = st.text_input("URL")
+        submitted = st.form_submit_button("保存")
 
-        if result: #見つかったなら
-            st.warning("既に登録されています")
-        else: #みつかった以外の時
-            # API検索
-            # ←① API検索
+    if submitted: #保存ボタンが押された時の処理---------------------
+        if company_name == "":
+            st.warning("会社名を入力してください")
+        else:
 
-            url = ""
-            response = tavily_client.search(
-                query=company_name
-            )
-            st.write(response)
-            results = response.get("results")
-
-            # ←② URL取り出す
-            NG_DOMAINS = [
-                        "mid-tenshoku",
-                        "wiki",
-                        "openwork",
-                        "mynavi",
-                        "shopping",
-                        "youtube",
-                        "britannica.com",
-                        "blog",
-                        "huggingface",
-                        "hf.co",
-                        "x.com",
-                        "finance.yahoo.co.jp",
-                        "onecareer.jp"
-                    ]
-            
-
-            if results:    
-                for result in results:
-                    url = result.get("url")
-                    is_ng = False #このURLが公式サイトか判別するフラグ
-
-                    if not url:
-                        continue
-                    for ng_domain in NG_DOMAINS:
-                        if ng_domain in url:
-                            is_ng = True
-                            break
-                    if is_ng:
-                            continue   
-                    break
-
-            # ←③ INSERT
+            # 同じ会社があるか確認
             cursor.execute(
-                #新しいデータ (company_name)をcompanies(company_name)に追加
-                "INSERT INTO companies (company_name, status, application_date, memo, url) VALUES (?, ?, ?, ?,?)",
-                (company_name,status, apply_date, memo, url)
+                #companiesテーブルからcompany_nameが入力された会社名と同じ物を探す
+            "SELECT * FROM companies WHERE company_name = ?",
+                (company_name,) #プレースホルダー(?)に値を渡す時はタプル形式で渡す
             )
+            #最初に見つかった1件を受け取る⇔同じ会社があるか判断
+            result = cursor.fetchone()
 
-            #データベースの変更を確定
-            conn.commit()
+            if result: #見つかったなら
+                st.warning("既に登録されています")
+            else: #みつかった以外の時
+                # API検索
+                # ←① API検索
 
-            st.success("登録しました！")
+                url = ""
+                response = tavily_client.search(
+                    query = f"{company_name} コーポレートサイト jp"
+                )
+                st.write(response)
+                results = response.get("results")
+
+                # ←② URL取り出す
+                NG_DOMAINS = [
+                            "mid-tenshoku",
+                            "wiki",
+                            "openwork",
+                            "mynavi",
+                            "careers",
+                            "shukatsu",
+                            "shopping",
+                            "youtube",
+                            "britannica.com",
+                            "blog",
+                            "huggingface",
+                            "hf.co",
+                            "x.com",
+                            "instagram",
+                            "facebook",
+                            "finance.yahoo.co.jp",
+                            "onecareer.jp",
+                            "kakaku.com",
+                            "minkabu",
+                            "linkedin",
+                            "nikkei",
+                            "globaldata.com",
+                            "forbes.com",
+                            "devex.com",
+                            "directagenda.jp",
+                            "hatena",
+                            "gamebiz",
+                            "asuka-plan.com",
+                            "prtimes"
+                        ]
+                
+
+                if results:    
+                    for result in results:
+                        url = result.get("url")
+                        is_ng = False #このURLが公式サイトか判別するフラグ
+
+                        if not url:
+                            continue
+                        for ng_domain in NG_DOMAINS:
+                            if ng_domain in url:
+                                is_ng = True
+                                break
+                        if is_ng:
+                                continue   
+                        break
+
+                # ←③ INSERT
+                cursor.execute(
+                    #新しいデータ (company_name)をcompanies(company_name)に追加
+                    "INSERT INTO companies (company_name, status, application_date, memo, url) VALUES (?, ?, ?, ?,?)",
+                    (company_name,status, apply_date, memo, url)
+                )
+
+                #データベースの変更を確定
+                conn.commit()
+
+                st.success("登録しました！")
         
 
 
 #操作画面--------------------------------
-st.subheader("検索・絞り込み")
-# 応募日ソート表示------------
-sort_order = st.selectbox(
-    "応募日並び順",
-    ["新しい順", "古い順"]
-)
-if sort_order == "新しい順":
-    cursor.execute("""
-    SELECT * FROM companies
-    ORDER BY application_date DESC
-    """)
-
-else:
-    cursor.execute("""
-    SELECT * FROM companies
-    ORDER BY application_date ASC
-    """)
-
-rows = cursor.fetchall()
-
-#検索機能--------------------------------
-search_word = st.text_input("会社名検索") 
-
-display_rows = rows
-if search_word:
-    search_results = []
-    for row in display_rows:
-        
-        if search_word in row[1]:
-            search_results.append(row)
-
-    display_rows = search_results
-    
-    if len(display_rows) == 0:
-        st.warning("該当する企業がありません")
-
-# 応募状況フィルター
-status_filter = st.selectbox(
-    "応募状況絞り込み",
-    ["すべて", "応募前", "応募済", "書類選考", "面接予定", "内定", "返信待ち"]
-)
-
-if status_filter != "すべて":
-    filter_results = []
-
-    for row in display_rows:
-        if row[2] == status_filter:
-            filter_results.append(row)
-            
-    display_rows = filter_results
-            
-    if len(display_rows) == 0:
-        st.warning("該当する企業がありません")
 
 
-# 応募状況をデータフレームで表示----------
-
-# 応募状況をサマリーとして表示------------
-st.subheader("応募状況サマリー")
-
-st.write(f"登録企業数：{len(rows)}件")
-df = pd.DataFrame(
-rows,
-columns=["ID", "会社名", "応募状況", "応募日", "メモ", "URL"]
-)
-status_count = df["応募状況"].value_counts()
-fig, ax = plt.subplots(figsize=(2,2))
-wedges, texts = ax.pie(
-    status_count.values,
-    colors=[
-    "#A8D8EA",
-    "#AAE3A2",
-    "#FFD3B6",
-    "#FFAAA5",
-    "#D4A5A5",
-    "#C7CEEA"
-    ]
-    
-)
-
-if len(rows) == 0:
-    st.info(
-    "まだ企業が登録されていません😊"
+if page == "企業一覧":
+    st.subheader("検索・絞り込み")
+    # 応募日ソート表示------------
+    sort_order = st.selectbox(
+        "応募日並び順",
+        ["新しい順", "古い順"]
     )
-else:
-    col1, col2 = st.columns([3,7])
-    with col1:
-        status_colors = {
-        "応募前": "#A8D8EA",
-        "応募済": "#AAE3A2",
-        "返信待ち": "#FFD3B6",
-        "書類選考": "#FFAAA5",
-        "面接予定": "#D4A5A5",
-        "内定": "#C7CEEA"
-        }
-        for status, count in status_count.items():
-            st.markdown(
-                f'<span style="color:{status_colors[status]}"><span style="font-size:25px; vertical-align:-2px">■ </span><span style="color:black">{status}　{count}件</span></span>',
-                unsafe_allow_html=True
+    if sort_order == "新しい順":
+        cursor.execute("""
+        SELECT * FROM companies
+        ORDER BY application_date DESC
+        """)
+
+    else:
+        cursor.execute("""
+        SELECT * FROM companies
+        ORDER BY application_date ASC
+        """)
+
+    rows = cursor.fetchall()
+
+    #検索機能--------------------------------
+
+    search_word = st.text_input("会社名検索") 
+
+    display_rows = rows
+    if search_word:
+        search_results = []
+        for row in display_rows:
+            
+            if search_word in row[1]:
+                search_results.append(row)
+
+        display_rows = search_results
+        
+        if len(display_rows) == 0:
+            st.warning("該当する企業がありません")
+
+    # 応募状況フィルター
+    status_filter = st.selectbox(
+        "応募状況絞り込み",
+        ["すべて", "応募前", "応募済", "書類選考", "面接予定", "内定", "返信待ち"]
+    )
+
+    if status_filter != "すべて":
+        filter_results = []
+
+        for row in display_rows:
+            if row[2] == status_filter:
+                filter_results.append(row)
+                
+        display_rows = filter_results
+                
+        if len(display_rows) == 0:
+            st.warning("該当する企業がありません")
+
+
+    # 応募状況をデータフレームで表示----------
+
+    # 応募状況をサマリーとして表示------------
+    st.subheader("応募状況サマリー")
+
+    st.write(f"登録企業数：{len(rows)}件")
+    df = pd.DataFrame(
+    rows,
+    columns=["ID", "会社名", "応募状況", "応募日", "メモ", "URL"]
+    )
+    status_count = df["応募状況"].value_counts()
+    fig, ax = plt.subplots(figsize=(2,2))
+    wedges, texts = ax.pie(
+        status_count.values,
+        colors=[
+        "#A8D8EA",
+        "#AAE3A2",
+        "#FFD3B6",
+        "#FFAAA5",
+        "#D4A5A5",
+        "#C7CEEA"
+        ]
+        
+    )
+
+    if len(rows) == 0:
+        st.info(
+        "まだ企業が登録されていません😊"
+        )
+    else:
+        col1, col2 = st.columns([3,7])
+        with col1:
+            status_colors = {
+            "応募前": "#A8D8EA",
+            "応募済": "#AAE3A2",
+            "返信待ち": "#FFD3B6",
+            "書類選考": "#FFAAA5",
+            "面接予定": "#D4A5A5",
+            "内定": "#C7CEEA"
+            }
+            for status, count in status_count.items():
+                st.markdown(
+                    f'<span style="color:{status_colors[status]}"><span style="font-size:25px; vertical-align:-2px">■ </span><span style="color:black">{status}　{count}件</span></span>',
+                    unsafe_allow_html=True
+                )
+                    
+
+        with col2:
+            st.pyplot(
+                fig,
+                use_container_width=False
             )
-                
+            # st.pyplot(fig)
 
-    with col2:
-        st.pyplot(
-            fig,
-            use_container_width=False
+    st.divider()
+
+
+    # 登録企業一覧表示--------------------
+    st.subheader("応募状況")
+
+    for row in display_rows:
+
+        st.subheader(row[1])
+
+        new_apply_date = st.date_input(
+            "応募日",
+            value=row[3],
+            key=f"apply_date_{row[0]}"
         )
-        # st.pyplot(fig)
+        status_list = [
+            "応募前",
+            "応募済",
+            "書類選考",
+            "面接予定",
+            "内定",
+            "返信待ち"
+        ]
 
-st.divider()
+        new_status = st.selectbox(
+            "応募状況",
+            status_list,
+            index=status_list.index(row[2]),
+            key=f"status_{row[0]}"
+        )
+
+        new_memo = st.text_area(
+            "メモ",
+            value=row[4],
+            height=80,
+            key=f"memo_{row[0]}"
+        )
+
+        new_url = st.text_input(
+            "URL ※企業URLは検索結果から自動取得しています。応募前に公式サイトであることをご確認ください。",
+            value=row[5],
+            key=f"URL_{row[0]}"
+        )
+        if row[5]:
+            st.link_button(
+                "🌐 企業研究する",
+                row[5]
+        )
+
+        button_col1, button_col2, _ = st.columns([1,1,8])
+        
+        with button_col1:
+            if st.button("変更", key=f"edit_{row[0]}"):
+                #変更内容があるか確認
+                if (
+                    new_status == row[2]
+                    and str(new_apply_date) == row[3]
+                    and new_memo == row[4]
+                    and new_url == row[5]
+                ):
+                    # 再描画後に表示する成功メッセージを保存
+                    st.session_state["message"] = "ℹ️ 変更はありません"
+                    st.session_state["message_type"] = "info"
+                    st.session_state["message_id"] = row[0]
+
+                    
+                else:
+                    cursor.execute(
+                        """
+                        UPDATE companies
+                        SET status = ?, memo = ?, application_date = ?, url = ?
+                        WHERE id = ?
+                        """,
+                        (new_status, new_memo, new_apply_date, new_url, row[0])
+                    )
+
+                    conn.commit()
+
+                    # 再描画後に表示する成功メッセージを保存
+                    st.session_state["message"] = "✅ 変更しました"
+                    st.session_state["message_type"] = "success"
+                    st.session_state["message_id"] = row[0]
+
+                    # 最新データを反映するため再描画
+                    st.rerun()
+            
+
+        with button_col2:
+            delete_clicked = st.button("削除", key=f"delete_{row[0]}")
+
+        # 削除ボタンが押されたら確認対象のIDを保存    
+        if delete_clicked:
+            st.session_state["confirm_delete"] = row[0]
+
+        # 削除確認中のIDと現在の行IDが一致した場合のみ警告を表示
+        
+        if st.session_state.get("confirm_delete") == row[0]:
+            st.warning(
+                "⚠ 本当に削除しますか？\n削除すると復元できません"
+            )
+            confirm_col1, confirm_col2, _ = st.columns([1,2,7])
+
+            with confirm_col1:
+
+                if st.button("はい", key=f"confirm_{row[0]}"):
+                    cursor.execute(
+                        "DELETE FROM companies WHERE id = ?",
+                        (row[0],)
+                    )
+                    conn.commit()
 
 
-# 登録企業一覧表示--------------------
-st.subheader("応募状況")
+                    # 削除確認状態を解除
+                    st.session_state.pop("confirm_delete")
 
-for row in display_rows:
+                    # 最新状態を反映するため再描画
+                    st.rerun()
 
-    st.subheader(row[1])
+            with confirm_col2:
 
-    new_apply_date = st.date_input(
-        "応募日",
-        value=row[3],
-        key=f"apply_date_{row[0]}"
-    )
-    status_list = [
-        "応募前",
-        "応募済",
-        "書類選考",
-        "面接予定",
-        "内定",
-        "返信待ち"
-    ]
+                if st.button("いいえ", key=f"cancel_{row[0]}"):
+                    # 削除確認状態を解除
+                    st.session_state.pop("confirm_delete")
+                    # 最新状態を反映するため再描画
+                    st.rerun()
 
-    new_status = st.selectbox(
-        "応募状況",
-        status_list,
-        index=status_list.index(row[2]),
-        key=f"status_{row[0]}"
-    )
 
-    new_memo = st.text_area(
-        "メモ",
-        value=row[4],
-        height=80,
-        key=f"memo_{row[0]}"
-    )
-
-    new_url = st.text_input(
-        "URL",
-        value=row[5],
-        key=f"URL_{row[0]}"
-    )
-    if row[5]:
-        st.link_button(
-            "🌐 企業研究する",
-            row[5]
-    )
-
-    button_col1, button_col2, _ = st.columns([1,1,8])
-    
-    with button_col1:
-        if st.button("変更", key=f"edit_{row[0]}"):
-            #変更内容があるか確認
-            if (
-                new_status == row[2]
-                and str(new_apply_date) == row[3]
-                and new_memo == row[4]
-                and new_url == row[5]
+        # 変更完了メッセージが保存されていたら表示
+        if (
+            st.session_state.get("message")
+            and st.session_state.get("message_id") == row[0]
+            and st.session_state.get("message_type") == "success"
             ):
-                # 再描画後に表示する成功メッセージを保存
-                st.session_state["message"] = "ℹ️ 変更はありません"
-                st.session_state["message_type"] = "info"
-                st.session_state["message_id"] = row[0]
+            st.success(st.session_state["message"])
+            
+        elif(
+            st.session_state.get("message")
+            and st.session_state.get("message_id") == row[0]
+            and st.session_state.get("message_type") == "info"
+            ):
+            st.info(st.session_state["message"])
 
-                
-            else:
-                cursor.execute(
-                    """
-                    UPDATE companies
-                    SET status = ?, memo = ?, application_date = ?, url = ?
-                    WHERE id = ?
-                    """,
-                    (new_status, new_memo, new_apply_date, new_url, row[0])
-                )
+        
+            st.divider()
 
-                conn.commit()
+        # 表示後は削除して次回表示されないようにする
+        st.session_state.pop("message", None)
+        st.session_state.pop("message_type", None)
+        st.session_state.pop("message_id", None)
 
-                # 再描画後に表示する成功メッセージを保存
-                st.session_state["message"] = "✅ 変更しました"
-                st.session_state["message_type"] = "success"
-                st.session_state["message_id"] = row[0]
-
-                # 最新データを反映するため再描画
-                st.rerun()
         
 
-    with button_col2:
-        delete_clicked = st.button("削除", key=f"delete_{row[0]}")
-
-    # 削除ボタンが押されたら確認対象のIDを保存    
-    if delete_clicked:
-        st.session_state["confirm_delete"] = row[0]
-
-    # 削除確認中のIDと現在の行IDが一致した場合のみ警告を表示
-    
-    if st.session_state.get("confirm_delete") == row[0]:
-        st.warning(
-            "⚠ 本当に削除しますか？\n削除すると復元できません"
-        )
-        confirm_col1, confirm_col2, _ = st.columns([1,2,7])
-
-        with confirm_col1:
-
-            if st.button("はい", key=f"confirm_{row[0]}"):
-                cursor.execute(
-                    "DELETE FROM companies WHERE id = ?",
-                    (row[0],)
-                )
-                conn.commit()
-
-
-                # 削除確認状態を解除
-                st.session_state.pop("confirm_delete")
-
-                # 最新状態を反映するため再描画
-                st.rerun()
-
-        with confirm_col2:
-
-            if st.button("いいえ", key=f"cancel_{row[0]}"):
-                # 削除確認状態を解除
-                st.session_state.pop("confirm_delete")
-                # 最新状態を反映するため再描画
-                st.rerun()
-
-
-    # 変更完了メッセージが保存されていたら表示
-    if (
-        st.session_state.get("message")
-        and st.session_state.get("message_id") == row[0]
-        and st.session_state.get("message_type") == "success"
-        ):
-        st.success(st.session_state["message"])
-        
-    elif(
-        st.session_state.get("message")
-        and st.session_state.get("message_id") == row[0]
-        and st.session_state.get("message_type") == "info"
-        ):
-        st.info(st.session_state["message"])
-
-    
-        st.divider()
-
-    # 表示後は削除して次回表示されないようにする
-    st.session_state.pop("message", None)
-    st.session_state.pop("message_type", None)
-    st.session_state.pop("message_id", None)
-
-    
-
-#データベースの接続を終了する
-conn.close()
+    #データベースの接続を終了する
+    conn.close()
