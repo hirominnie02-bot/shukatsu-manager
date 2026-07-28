@@ -387,10 +387,10 @@ if page == "企業一覧":
         
             st.divider()
 
-        # 表示後は削除して次回表示されないようにする
-        st.session_state.pop("message", None)
-        st.session_state.pop("message_type", None)
-        st.session_state.pop("message_id", None)
+    # 表示後は削除して次回表示されないようにする
+    st.session_state.pop("message", None)
+    st.session_state.pop("message_type", None)
+    st.session_state.pop("message_id", None)
 
         
 
