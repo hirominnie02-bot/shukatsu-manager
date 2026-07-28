@@ -60,6 +60,7 @@ def find_official_url(company_name): # 企業の公式サイトを検索
     response = tavily_client.search(
         query = f"{company_name} コーポレートサイト jp"
     )
+    st.write(response)
     results = response.get("results")
     if results:
         for result in results:
