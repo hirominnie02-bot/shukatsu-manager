@@ -14,6 +14,69 @@ tavily_client = TavilyClient(api_key)
 
 
 plt.rcParams["font.family"] = "Yu Gothic"
+# 関数-------------------------------------------
+# NGドメインを除外
+NG_DOMAINS = [
+            "mid-tenshoku",
+            "wiki",
+            "openwork",
+            "mynavi",
+            "careers",
+            "shukatsu",
+            "shopping",
+            "store",
+            "shop.com",
+            "youtube",
+            "britannica.com",
+            "blog",
+            "huggingface",
+            "hf.co",
+            "x.com",
+            "instagram",
+            "facebook",
+            "finance.yahoo.co.jp",
+            "onecareer.jp",
+            "kakaku.com",
+            "minkabu",
+            "linkedin",
+            "nikkei",
+            "globaldata.com",
+            "forbes.com",
+            "devex.com",
+            "directagenda.jp",
+            "hatena",
+            "gamebiz",
+            "asuka-plan.com",
+            "prtimes"
+        ]
+def is_ng_domain(url): # NGワード含むURLを除外
+    for ng_domain in NG_DOMAINS:
+        if ng_domain in url:
+            return True
+
+    return False
+
+def find_official_url(company_name): # 企業の公式サイトを検索
+    url = ""
+    response = tavily_client.search(
+        query = f"{company_name} コーポレートサイト jp"
+    )
+    results = response.get("results")
+    
+    if results:
+        for result in results:
+            url = result.get("url")
+
+            if not url:
+                continue
+
+            if is_ng_domain(url):
+                continue
+
+            break
+
+        return url
+
 
 st.title("就活管理アプリ")
 #データベースjob_app.dbに接続
@@ -55,66 +118,10 @@ if page == "登録":
             if result: #見つかったなら
                 st.warning("既に登録されています")
             else: #みつかった以外の時
-                # API検索
-                # ←① API検索
+                # 企業の公式サイトをAPI検索
+                url = find_official_url(company_name)
 
-                url = ""
-                response = tavily_client.search(
-                    query = f"{company_name} コーポレートサイト jp"
-                )
-                st.write(response)
-                results = response.get("results")
-
-                # ←② URL取り出す
-                NG_DOMAINS = [
-                            "mid-tenshoku",
-                            "wiki",
-                            "openwork",
-                            "mynavi",
-                            "careers",
-                            "shukatsu",
-                            "shopping",
-                            "youtube",
-                            "britannica.com",
-                            "blog",
-                            "huggingface",
-                            "hf.co",
-                            "x.com",
-                            "instagram",
-                            "facebook",
-                            "finance.yahoo.co.jp",
-                            "onecareer.jp",
-                            "kakaku.com",
-                            "minkabu",
-                            "linkedin",
-                            "nikkei",
-                            "globaldata.com",
-                            "forbes.com",
-                            "devex.com",
-                            "directagenda.jp",
-                            "hatena",
-                            "gamebiz",
-                            "asuka-plan.com",
-                            "prtimes"
-                        ]
-                
-
-                if results:    
-                    for result in results:
-                        url = result.get("url")
-                        is_ng = False #このURLが公式サイトか判別するフラグ
-
-                        if not url:
-                            continue
-                        for ng_domain in NG_DOMAINS:
-                            if ng_domain in url:
-                                is_ng = True
-                                break
-                        if is_ng:
-                                continue   
-                        break
-
-                # ←③ INSERT
+                # データベースへ登録
                 cursor.execute(
                     #新しいデータ (company_name)をcompanies(company_name)に追加
                     "INSERT INTO companies (company_name, status, application_date, memo, url) VALUES (?, ?, ?, ?,?)",
