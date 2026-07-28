@@ -1,4 +1,6 @@
 streamlit
-matplotlib
 pandas
+matplotlib
+requests
+python-dotenv
 tavily-python
