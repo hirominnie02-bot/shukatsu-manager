@@ -71,7 +71,7 @@ def find_official_url(company_name): # 企業の公式サイトを検索
             break
         return url
 
-
+st.write(api_key)
 st.title("就活管理アプリ")
 #データベースjob_app.dbに接続
 conn = sqlite3.connect("job_app.db")
