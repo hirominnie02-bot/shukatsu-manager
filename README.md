@@ -38,12 +38,6 @@
 
 ---
 
-![登録画面](images/register.png)
-
-![企業一覧](images/list.png)
-
-![円グラフ](images/chart.png.png)
-
 ## 使用技術
 
 - Python
