@@ -53,7 +53,6 @@ def is_ng_domain(url): # NGワード含むURLを除外
     for ng_domain in NG_DOMAINS:
         if ng_domain in url:
             return True
-
     return False
 
 def find_official_url(company_name): # 企業の公式サイトを検索
@@ -62,19 +61,14 @@ def find_official_url(company_name): # 企業の公式サイトを検索
         query = f"{company_name} コーポレートサイト jp"
     )
     results = response.get("results")
-    
     if results:
         for result in results:
             url = result.get("url")
-
             if not url:
                 continue
-
             if is_ng_domain(url):
                 continue
-
             break
-
         return url
 
 
@@ -85,7 +79,8 @@ conn = sqlite3.connect("job_app.db")
 cursor = conn.cursor()
 page = st.sidebar.radio(
     "📁 メニュー",
-    ["登録", "企業一覧"]
+    ["登録", "企業一覧"],
+    key = "page"
 )
 if page == "登録":
     with st.form("company_form", clear_on_submit=True):
@@ -98,7 +93,6 @@ if page == "登録":
         )
         apply_date = st.date_input("応募日")
         memo = st.text_area("メモ")
-        url = st.text_input("URL")
         submitted = st.form_submit_button("保存")
 
     if submitted: #保存ボタンが押された時の処理---------------------
@@ -119,7 +113,8 @@ if page == "登録":
                 st.warning("既に登録されています")
             else: #みつかった以外の時
                 # 企業の公式サイトをAPI検索
-                url = find_official_url(company_name)
+                with st.spinner("公式サイトを検索中..."):
+                    url = find_official_url(company_name)
 
                 # データベースへ登録
                 cursor.execute(
@@ -136,8 +131,6 @@ if page == "登録":
 
 
 #操作画面--------------------------------
-
-
 if page == "企業一覧":
     st.subheader("検索・絞り込み")
     # 応募日ソート表示------------
