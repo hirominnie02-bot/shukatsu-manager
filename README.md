@@ -1,14 +1,17 @@
 # Shukatsu Manager
+
+[![Open in Streamlit](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://shukatsu-manager-demo.streamlit.app/)
+
+🌐 **Demo**
+https://shukatsu-manager-demo.streamlit.app/
+
 ![Python](https://img.shields.io/badge/Python-3.14-3776AB?logo=python&logoColor=white)
 ![Streamlit](https://img.shields.io/badge/Streamlit-WebApp-FF4B4B?logo=streamlit&logoColor=white)
 ![SQLite](https://img.shields.io/badge/SQLite-Database-003B57?logo=sqlite&logoColor=white)
 
-就職活動で応募した企業を管理するためのWebアプリです。
-
-応募企業の登録・編集・検索・管理に加え、企業名から公式サイトを自動取得する機能を実装しています。
-
 ## 概要
-応募した企業の情報を登録・管理できるWebアプリです。
+就職活動で応募した企業を管理できるWebアプリです。  
+応募企業の登録・編集・検索・管理に加え、企業名から公式サイトを自動取得する機能を実装しています。
 
 ## スクリーンショット
 
